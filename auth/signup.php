@@ -22,7 +22,9 @@ if ($count >0 ){
         "users_email" => $email,
         "users_phone" => $phone,
         "users_verfiycode" => $verfiycode,
+        "users_active" => "1",
     );
     sendEmail($email, "Verfiy Code Glare Group E-commerce App", "Hello $username \n Your Verfiy Code is $verfiycode \n Please don't share it to Anyone !");
     insertData($table, $data);
+    
 }
