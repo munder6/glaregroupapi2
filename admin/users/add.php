@@ -26,7 +26,7 @@ $data = array(
     "users_password" => $password,
     "users_email" => $email,
     "users_phone" => $phone,
-    "users_verfiycode" => $verfiycode,
+    "users_verifycode" => $verfiycode,
     "users_approve" => "1",
     "users_active" => $active,
 );
