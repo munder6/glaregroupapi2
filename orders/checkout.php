@@ -22,8 +22,12 @@ $totalprice = $ordersprice + $pricedelivery;
 //check coupon
 $now = date("Y-m-d H:i:s") ;
 
-$checkcoupon = getData("coupon", "coupon_id = '$couponid' AND coupon_expdate > '$now' AND coupon_count > 0" , null , false);
-
+$checkcoupon = getData(
+    "coupon",
+    "coupon_id = '$couponid' AND coupon_expdate > '$now' AND coupon_count > 0 AND coupon_active = '1'" ,
+    null ,
+    false
+);
 
 
 if($checkcoupon > 0){
