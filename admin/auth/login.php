@@ -33,7 +33,7 @@ $passHash = sha1($password);
 
 $stmt = $con->prepare("
   SELECT admin_id, admin_name, admin_email, admin_phone, admin_password, admin_approve,
-         created_at, updated_at
+         admin_theme, admin_language, created_at, updated_at
   FROM admin
   WHERE admin_email = ?
   LIMIT 1
@@ -60,6 +60,9 @@ echo json_encode([
     'admin_id'    => (int)$admin['admin_id'],
     'admin_name'  => $admin['admin_name'],
     'admin_email' => $admin['admin_email'],
+    'admin_phone' => $admin['admin_phone'],
+    'admin_theme' => $admin['admin_theme'],
+    'admin_language' => $admin['admin_language'],
     'created_at'  => $admin['created_at'],
     'updated_at'  => $admin['updated_at'],
   ]
