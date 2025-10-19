@@ -128,35 +128,84 @@ function deleteData($table, $where, $json = true)
     return $count;
 }
 
-function imageUpload($dir ,$imageRequest)
+function imageUpload($dir, $imageRequest)
 {
-  global $msgError;
-  if(isset($_FILES[$imageRequest])){
-    $imagename  = rand(1000, 10000) . $_FILES[$imageRequest]['name'];
-    $imagetmp   = $_FILES[$imageRequest]['tmp_name'];
-    $imagesize  = $_FILES[$imageRequest]['size'];
-    $allowExt   = array("jpg", "JPG" , "png", "PNG" , "gif", "GIF" , "mp3", "MP3" , "pdf", "PDF" , "svg" , "SVG" , "jpeg", "JPEG");
-    $strToArray = explode(".", $imagename);
-    $ext        = end($strToArray);
-    $ext        = strtolower($ext);
-  
-    if (!empty($imagename) && !in_array($ext, $allowExt)) {
-      $msgError = "EXT";
-    }
-    if ($imagesize > 2 * MB) {
-      $msgError = "size";
-    }
-    if (empty($msgError)) {
-      move_uploaded_file($imagetmp, $dir . "/" . $imagename);
-      return $imagename;
-    } else {
-      return "fail";
-    }
-  }else{
-    return 'empty';
-  }
+    // نتائج مبدئية
+    global $msgError;
+    $msgError = null;
 
+    // تأكد من وجود الملف
+    if (!isset($_FILES[$imageRequest])) {
+        return 'empty';
+    }
+
+    $f = $_FILES[$imageRequest];
+
+    // تأكد من عدم وجود أخطاء رفع من PHP
+    if (!isset($f['error']) || $f['error'] !== UPLOAD_ERR_OK) {
+        // رجّع سبب الفشل لمزيد من التشخيص
+        return 'fail';
+    }
+
+    // أنشئ المجلد إن لم يكن موجودًا
+    if (!is_dir($dir)) {
+        if (!mkdir($dir, 0775, true) && !is_dir($dir)) {
+            // فشل إنشاء المجلد
+            return 'fail';
+        }
+    }
+
+    // حدود وصيغ مسموحة
+    $allowExt = array("jpg","jpeg","png","gif","webp","svg","pdf","mp3");
+    $maxBytes = 2 * 1048576; // 2MB
+
+    $origName = $f['name'] ?? 'file';
+
+    // تنظيف الاسم: تحويل الرموز الغريبة + إزالة المسافات/الرموز غير الآمنة
+    $safe = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $origName);
+    if ($safe === false) { $safe = $origName; }
+    $safe = preg_replace('/[^\w\.\-]+/u', '_', $safe);
+    $safe = preg_replace('/_+/', '_', $safe);
+    $safe = trim($safe, '_');
+
+    // الامتداد
+    $ext = strtolower(pathinfo($safe, PATHINFO_EXTENSION));
+
+    if ($safe === '' || $ext === '') {
+        return 'fail';
+    }
+
+    if (!in_array($ext, $allowExt, true)) {
+        return 'fail';
+    }
+
+    // حجم الملف
+    $size = isset($f['size']) ? (int)$f['size'] : 0;
+    if ($size <= 0 || $size > $maxBytes) {
+        return 'fail';
+    }
+
+    // اسم نهائي مع بادئة عشوائية لتفادي التعارض
+    $base = pathinfo($safe, PATHINFO_FILENAME);
+    $final = rand(1000, 10000) . '_' . $base . '.' . $ext;
+    $target = rtrim($dir, '/\\') . DIRECTORY_SEPARATOR . $final;
+
+    // تأكد أن الملف فعلاً مرفوع من PHP
+    if (!is_uploaded_file($f['tmp_name'])) {
+        return 'fail';
+    }
+
+    // انقل الملف وتحقق من النتيجة
+    if (!move_uploaded_file($f['tmp_name'], $target)) {
+        return 'fail';
+    }
+
+    // صلاحيات الملف (اختياري)
+    @chmod($target, 0644);
+
+    return $final;
 }
+
 
 
 
